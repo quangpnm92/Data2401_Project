@@ -1,0 +1,88 @@
+---
+title: "Final Project"
+author: "abcd"
+date: "today"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(countrycode)
+```
+
+
+```{r}
+salaries = read.csv("ds_salaries.csv")
+```
+
+#Top 5 jobs each year get best pay
+```{r}
+salaries %>%  group_by(work_year,job_title) %>% summarise(avg_salary = mean(salary_in_usd)) %>%  slice_max(avg_salary, n=3)
+```
+
+Average salary each job get 2020-2022
+```{r}
+salaries %>% group_by(job_title) %>% summarise(avg_salary = mean(salary_in_usd))
+```
+
+Average salary in each "job", "Size_company" pay 2020-2022
+```{r}
+salaries %>% group_by(company_size,job_title) %>% summarise(avg_salary = mean(salary_in_usd))
+```
+
+
+
+#Top 3 jobs most appear
+```{r}
+salaries %>% group_by(job_title) %>% count() %>% arrange(desc(n)) %>% head(3)
+```
+
+##Compare salary each "size_company" pay for of top 3 job_title (bargraph)
+```{r}
+# I want to find the jobtitle that all hired on all comp_size, is there any way to get it.
+
+salaries %>% filter(job_title %in% c("Data Scientist", "Data Engineer","Data Analyst")) %>%  group_by(company_size,job_title) %>% summarise(avg_salary = mean(salary_in_usd))
+```
+
+#Salary between working remote and onshore => color by company_size
+
+
+#Total company in size for remote-working
+
+
+#% remote among L,M,S company_size
+#% exp_level maong LMS company_size
+
+# avg salry all over the world (an diem,worldmap)
+```{r}
+country = salaries$employee_residence
+
+salaries$country = countrycode(country, "iso2c", "country.name")
+
+salaries %>% group_by(country) %>% summarise(avg_salary = mean(salary_in_usd))
+#phai hon 5 thang cua 1 nuoc moi bo vao data
+```
+
+# Total of job_title per country  over the world (???)
+```{r}
+country = salaries$employee_residence
+
+salaries$country = countrycode(country, "iso2c", "country.name")
+
+salaries %>% group_by(country,job_title) %>% count() %>% arrange(desc(n))
+
+```
+
+
+#Which country hire people most
+
+
+#the involution of exp_level via each year by salary (line graph, y = sal, x = year, color = exp_level)
+```{r}
+test = salaries %>% group_by(work_year,experience_level) %>% summarize(avg_salary = mean(salary))
+
+ggplot(test, aes(x = work_year, y = avg_salary,color = experience_level))+ geom_line()
+```
+##I have no idea if company decrease man-power, increase salary
