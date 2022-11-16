@@ -10,6 +10,9 @@ library(tidyverse)
 library(dplyr)
 library(ggplot2)
 library(countrycode)
+library(ggthemes)
+require(maps)
+require(viridis)
 ```
 
 
@@ -57,21 +60,34 @@ salaries %>% filter(job_title %in% c("Data Scientist", "Data Engineer","Data Ana
 
 # avg salry all over the world (an diem,worldmap)
 ```{r}
-country = salaries$employee_residence
+country_employee = salaries$employee_residence
 
-salaries$country = countrycode(country, "iso2c", "country.name")
+salaries$country_employee = countrycode(country_employee, "iso2c", "country.name")
 
-salaries %>% group_by(country) %>% summarise(avg_salary = mean(salary_in_usd))
-#phai hon 5 thang cua 1 nuoc moi bo vao data
+salaries %>% group_by(country_employee) %>% summarise(avg_salary = mean(salary_in_usd))
+
 ```
+
+```{r}
+world_map <- map_data("world")
+world_salaries <-salaries %>% group_by(country_employee) %>% summarise(avg_salary = mean(salary_in_usd))
+
+countries_map <- left_join(world_salaries, world_map, by = c("country_employee"="region"))
+
+ggplot(countries_map, aes(long, lat, group = group))+
+  geom_polygon(aes(fill = avg_salary ), color = "white")+
+  scale_fill_viridis_c(option = "C")
+```
+
+
 
 # Total of job_title per country  over the world (???)
 ```{r}
-country = salaries$employee_residence
+country_company = salaries$company_location
 
-salaries$country = countrycode(country, "iso2c", "country.name")
+salaries$country_company = countrycode(country_company, "iso2c", "country.name")
 
-salaries %>% group_by(country,job_title) %>% count() %>% arrange(desc(n))
+salaries %>% group_by(country_company,job_title) %>% count() %>% arrange(desc(n))
 
 ```
 
