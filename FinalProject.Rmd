@@ -52,11 +52,7 @@ salaries %>% filter(job_title %in% c("Data Scientist", "Data Engineer","Data Ana
 #Salary between working remote and onshore => color by company_size
 
 
-#Total company in size for remote-working
-
-
-#% remote among L,M,S company_size
-#% exp_level maong LMS company_size
+#% remote among company_size in year
 
 # avg salry all over the world (an diem,worldmap)
 ```{r}
@@ -71,6 +67,10 @@ salaries %>% group_by(country_employee) %>% summarise(avg_salary = mean(salary_i
 ```{r}
 world_map <- map_data("world")
 world_salaries <-salaries %>% group_by(country_employee) %>% summarise(avg_salary = mean(salary_in_usd))
+
+# Changing the data manaually so that it matches
+
+#world_salaries$country_employee = "United States" <- "USA"
 
 countries_map <- left_join(world_salaries, world_map, by = c("country_employee"="region"))
 
@@ -87,7 +87,7 @@ country_company = salaries$company_location
 
 salaries$country_company = countrycode(country_company, "iso2c", "country.name")
 
-salaries %>% group_by(country_company,job_title) %>% count() %>% arrange(desc(n))
+salaries %>% group_by(country_company,job_title) %>% count() %>% arrange(desc(n)) %>%  summarize (n = n())
 
 ```
 
