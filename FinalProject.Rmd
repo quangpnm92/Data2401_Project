@@ -49,10 +49,6 @@ salaries %>% group_by(job_title) %>% count() %>% arrange(desc(n)) %>% head(3)
 salaries %>% filter(job_title %in% c("Data Scientist", "Data Engineer","Data Analyst")) %>%  group_by(company_size,job_title) %>% summarise(avg_salary = mean(salary_in_usd))
 ```
 
-#Salary between working remote and onshore => color by company_size
-
-
-#% remote among company_size in year
 
 # avg salry all over the world (an diem,worldmap)
 ```{r}
@@ -70,24 +66,40 @@ world_salaries <-salaries %>% group_by(country_employee) %>% summarise(avg_salar
 
 # Changing the data manaually so that it matches
 
-#world_salaries$country_employee = "United States" <- "USA"
+setdiff(world_salaries$country_employee, world_map$region)
 
-countries_map <- left_join(world_salaries, world_map, by = c("country_employee"="region"))
+world_salaries[world_salaries == "United States"] <- "USA"
+world_salaries[world_salaries == "Czechia"] <- "Czech Republic"
+#world_salaries[world_salaries == "Hong Kong SAR China"] <- "China"
+world_salaries[world_salaries == "United Kingdom"] <- "UK"
+
+countries_map <- right_join(world_salaries, world_map, by = c("country_employee"="region"))
 
 ggplot(countries_map, aes(long, lat, group = group))+
-  geom_polygon(aes(fill = avg_salary ), color = "white")+
-  scale_fill_viridis_c(option = "C")
+  geom_polygon(aes(fill = avg_salary ), color = "white")+ scale_fill_viridis_c(option = "B")
+```
+
+#ratio between company_size with remote_ratio
+```{r}
+salaries$remote_ratio[salaries$remote_ratio == '100'] <- '100%'
+salaries$remote_ratio[salaries$remote_ratio == '50'] <- '50%'
+salaries$remote_ratio[salaries$remote_ratio == '0'] <- '0%'
+
+ggplot(salaries %>% group_by(company_size, remote_ratio)) + 
+  geom_bar(mapping = aes(x = company_size, fill = remote_ratio), position = "dodge")
+
 ```
 
 
-
-# Total of job_title per country  over the world (???)
+# Compare on-shore and remote salary
 ```{r}
-country_company = salaries$company_location
+#salary_explevel = salaries %>% group_by(work_year, remote_ratio) %>% summarize(avg_salary = mean(salary))
+#ggplot(salary_explevel, aes(x = work_year, y = avg_salary,color = remote_ratio))+ geom_density()
 
-salaries$country_company = countrycode(country_company, "iso2c", "country.name")
+ggplot(salaries %>% group_by(company_size, remote_ratio)) + 
+  geom_bar(mapping = aes(x = company_size, fill = remote_ratio), position = "dodge")
 
-salaries %>% group_by(country_company,job_title) %>% count() %>% arrange(desc(n)) %>%  summarize (n = n())
+ggplot(salaries) + geom_bar(mapping = aes(x = remote_ratio, fill = remote_ratio))
 
 ```
 
@@ -97,8 +109,8 @@ salaries %>% group_by(country_company,job_title) %>% count() %>% arrange(desc(n)
 
 #the involution of exp_level via each year by salary (line graph, y = sal, x = year, color = exp_level)
 ```{r}
-test = salaries %>% group_by(work_year,experience_level) %>% summarize(avg_salary = mean(salary))
+salary_explevel = salaries %>% group_by(work_year,experience_level) %>% summarize(avg_salary = mean(salary))
 
-ggplot(test, aes(x = work_year, y = avg_salary,color = experience_level))+ geom_line()
+ggplot(salary_explevel, aes(x = work_year, y = avg_salary,color = experience_level))+ geom_line()
 ```
 ##I have no idea if company decrease man-power, increase salary
