@@ -11,28 +11,15 @@ library(dplyr)
 library(ggplot2)
 library(countrycode)
 library(ggthemes)
+library(ggpubr)
 require(maps)
 require(viridis)
+
 ```
 
 
-```{r}
+```{r include=FALSE}
 salaries = read.csv("ds_salaries.csv")
-```
-
-#Top 5 jobs each year get best pay
-```{r}
-salaries %>%  group_by(work_year,job_title) %>% summarise(avg_salary = mean(salary_in_usd)) %>%  slice_max(avg_salary, n=3)
-```
-
-Average salary each job get 2020-2022
-```{r}
-salaries %>% group_by(job_title) %>% summarise(avg_salary = mean(salary_in_usd))
-```
-
-Average salary in each "job", "Size_company" pay 2020-2022
-```{r}
-salaries %>% group_by(company_size,job_title) %>% summarise(avg_salary = mean(salary_in_usd))
 ```
 
 
@@ -42,16 +29,9 @@ salaries %>% group_by(company_size,job_title) %>% summarise(avg_salary = mean(sa
 salaries %>% group_by(job_title) %>% count() %>% arrange(desc(n)) %>% head(3)
 ```
 
-##Compare salary each "size_company" pay for of top 3 job_title (bargraph)
-```{r}
-# I want to find the jobtitle that all hired on all comp_size, is there any way to get it.
 
-salaries %>% filter(job_title %in% c("Data Scientist", "Data Engineer","Data Analyst")) %>%  group_by(company_size,job_title) %>% summarise(avg_salary = mean(salary_in_usd))
-```
-
-
-# avg salry all over the world (an diem,worldmap)
-```{r}
+# avg salry all over the world
+```{r include=FALSE}
 country_employee = salaries$employee_residence
 
 salaries$country_employee = countrycode(country_employee, "iso2c", "country.name")
@@ -60,7 +40,7 @@ salaries %>% group_by(country_employee) %>% summarise(avg_salary = mean(salary_i
 
 ```
 
-```{r}
+```{r, fig.height=8, fig.width=15, warning=FALSE}
 world_map <- map_data("world")
 world_salaries <-salaries %>% group_by(country_employee) %>% summarise(avg_salary = mean(salary_in_usd))
 
@@ -76,33 +56,24 @@ world_salaries[world_salaries == "United Kingdom"] <- "UK"
 countries_map <- right_join(world_salaries, world_map, by = c("country_employee"="region"))
 
 ggplot(countries_map, aes(long, lat, group = group))+
-  geom_polygon(aes(fill = avg_salary ), color = "white")+ scale_fill_viridis_c(option = "B")
+  geom_polygon(aes(fill = avg_salary ), color = "white")+ scale_fill_viridis_c(option = "B") 
+
 ```
 
-#ratio between company_size with remote_ratio
-```{r}
+# ratio between company_size with remote_ratio
+# Compare on-shore and remote salary
+```{r, warning=FALSE, fig.height=8, fig.width=15}
 salaries$remote_ratio[salaries$remote_ratio == '100'] <- '100%'
 salaries$remote_ratio[salaries$remote_ratio == '50'] <- '50%'
 salaries$remote_ratio[salaries$remote_ratio == '0'] <- '0%'
 
-ggplot(salaries %>% group_by(company_size, remote_ratio)) + 
-  geom_bar(mapping = aes(x = company_size, fill = remote_ratio), position = "dodge")
+par(mfrow = c(1, 2))
+ggarrange (ggplot(salaries %>% group_by(company_size, remote_ratio)) + 
+  geom_bar(mapping = aes(x = company_size, fill = remote_ratio), position = "dodge"),
 
+ggplot(salaries %>% group_by(company_size,remote_ratio) %>% summarize (avg_salary = mean(salary_in_usd))) + 
+  geom_col(mapping = aes(x = company_size, y = avg_salary, fill = remote_ratio), position = "dodge"), ncol = 2, nrow =2 )
 ```
-
-
-# Compare on-shore and remote salary
-```{r}
-#salary_explevel = salaries %>% group_by(work_year, remote_ratio) %>% summarize(avg_salary = mean(salary))
-#ggplot(salary_explevel, aes(x = work_year, y = avg_salary,color = remote_ratio))+ geom_density()
-
-ggplot(salaries %>% group_by(company_size, remote_ratio)) + 
-  geom_bar(mapping = aes(x = company_size, fill = remote_ratio), position = "dodge")
-
-ggplot(salaries) + geom_bar(mapping = aes(x = remote_ratio, fill = remote_ratio))
-
-```
-
 
 #Which country hire people most
 
