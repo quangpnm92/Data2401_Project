@@ -56,13 +56,12 @@ world_salaries[world_salaries == "United Kingdom"] <- "UK"
 countries_map <- right_join(world_salaries, world_map, by = c("country_employee"="region"))
 
 ggplot(countries_map, aes(long, lat, group = group))+
-  geom_polygon(aes(fill = avg_salary ), color = "white")+ scale_fill_viridis_c(option = "B") 
-
+  geom_polygon(aes(fill = avg_salary ), color = "white")+ scale_fill_viridis_c(option = "B")
 ```
 
 # ratio between company_size with remote_ratio
 # Compare on-shore and remote salary
-```{r, warning=FALSE, fig.height=8, fig.width=15}
+```{r, warning=FALSE, fig.height=10, fig.width=15}
 salaries$remote_ratio[salaries$remote_ratio == '100'] <- '100%'
 salaries$remote_ratio[salaries$remote_ratio == '50'] <- '50%'
 salaries$remote_ratio[salaries$remote_ratio == '0'] <- '0%'
@@ -76,7 +75,11 @@ ggplot(salaries %>% group_by(company_size,remote_ratio) %>% summarize (avg_salar
 ```
 
 #Which country hire people most
+```{r}
+salary_explevel = salaries %>% group_by(work_year,experience_level) %>% summarize(avg_salary = mean(salary))
 
+ggplot(salary_explevel, aes(x = work_year, y = avg_salary,color = experience_level))+ geom_line()
+```
 
 #the involution of exp_level via each year by salary (line graph, y = sal, x = year, color = exp_level)
 ```{r}
