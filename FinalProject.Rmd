@@ -5,7 +5,7 @@ date: "today"
 output: html_document
 ---
 
-```{r}
+```{r include=FALSE}
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
@@ -14,6 +14,7 @@ library(ggthemes)
 library(ggpubr)
 require(maps)
 require(viridis)
+options(scipen=100)
 
 ```
 
@@ -25,12 +26,12 @@ salaries = read.csv("ds_salaries.csv")
 
 
 #Top 3 jobs most appear
-```{r}
+```{r echo=FALSE}
 salaries %>% group_by(job_title) %>% count() %>% arrange(desc(n)) %>% head(3)
 ```
 
 
-# avg salry all over the world
+# Average Salary all over the world
 ```{r include=FALSE}
 country_employee = salaries$employee_residence
 
@@ -40,7 +41,7 @@ salaries %>% group_by(country_employee) %>% summarise(avg_salary = mean(salary_i
 
 ```
 
-```{r, fig.height=8, fig.width=15, warning=FALSE}
+```{r fig.height=8, fig.width=15, warning=FALSE}
 world_map <- map_data("world")
 world_salaries <-salaries %>% group_by(country_employee) %>% summarise(avg_salary = mean(salary_in_usd))
 
@@ -50,7 +51,6 @@ setdiff(world_salaries$country_employee, world_map$region)
 
 world_salaries[world_salaries == "United States"] <- "USA"
 world_salaries[world_salaries == "Czechia"] <- "Czech Republic"
-#world_salaries[world_salaries == "Hong Kong SAR China"] <- "China"
 world_salaries[world_salaries == "United Kingdom"] <- "UK"
 
 countries_map <- right_join(world_salaries, world_map, by = c("country_employee"="region"))
@@ -59,32 +59,36 @@ ggplot(countries_map, aes(long, lat, group = group))+
   geom_polygon(aes(fill = avg_salary ), color = "white")+ scale_fill_viridis_c(option = "B")
 ```
 
-# ratio between company_size with remote_ratio
-# Compare on-shore and remote salary
-```{r, warning=FALSE, fig.height=10, fig.width=15}
+# Compare between Remote ratio in each Company Size to their Average Salary their employees get paid
+```{r, warning=FALSE, fig.height=5, fig.width=15}
 salaries$remote_ratio[salaries$remote_ratio == '100'] <- '100%'
 salaries$remote_ratio[salaries$remote_ratio == '50'] <- '50%'
 salaries$remote_ratio[salaries$remote_ratio == '0'] <- '0%'
 
-par(mfrow = c(1, 2))
 ggarrange (ggplot(salaries %>% group_by(company_size, remote_ratio)) + 
-  geom_bar(mapping = aes(x = company_size, fill = remote_ratio), position = "dodge"),
+  geom_bar(mapping = aes(x = company_size, fill = remote_ratio), position = "dodge") +
+    labs (title = "Ratio Remote", subtitle = "Company Size", y = "Number", x = "Company Size") + 
+    scale_fill_discrete(name = "Remote Ratio"),
 
 ggplot(salaries %>% group_by(company_size,remote_ratio) %>% summarize (avg_salary = mean(salary_in_usd))) + 
-  geom_col(mapping = aes(x = company_size, y = avg_salary, fill = remote_ratio), position = "dodge"), ncol = 2, nrow =2 )
+  geom_col(mapping = aes(x = company_size, y = avg_salary, fill = remote_ratio), position = "dodge")+
+    labs (title = "Average Salary", subtitle = "Company Size", y = "Average Salary", x = "Company Size") + 
+    scale_fill_discrete(name = "Remote Ratio"), ncol = 2, nrow =1 )
 ```
 
-#Which country hire people most
+
+#the involution of exp_level via each year by salary
 ```{r}
 salary_explevel = salaries %>% group_by(work_year,experience_level) %>% summarize(avg_salary = mean(salary))
 
-ggplot(salary_explevel, aes(x = work_year, y = avg_salary,color = experience_level))+ geom_line()
-```
+salary_explevel$experience_level[salary_explevel$experience_level == 'EN'] <- 'Entry-level'
+salary_explevel$experience_level[salary_explevel$experience_level == 'EX'] <- 'Executive-level'
+salary_explevel$experience_level[salary_explevel$experience_level == 'MI'] <- 'Mid-level'
+salary_explevel$experience_level[salary_explevel$experience_level == 'SE'] <- 'Senior-level'
 
-#the involution of exp_level via each year by salary (line graph, y = sal, x = year, color = exp_level)
-```{r}
-salary_explevel = salaries %>% group_by(work_year,experience_level) %>% summarize(avg_salary = mean(salary))
 
-ggplot(salary_explevel, aes(x = work_year, y = avg_salary,color = experience_level))+ geom_line()
+ggplot(salary_explevel, aes(x = work_year, y = avg_salary,color = experience_level))+ geom_line() +
+    labs (title = "Salary", subtitle = "Experience Level", y = "Average Salary", x = "Year") + 
+    scale_colour_discrete(name = "Experience Level")
 ```
 ##I have no idea if company decrease man-power, increase salary
